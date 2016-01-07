@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3612DE7B1C3D3CF2000BD6D5 /* KLTLoadingView.m in Sources */ = {isa = PBXBuildFile; fileRef = 36A00F9A1C33DCB100FF5097 /* KLTLoadingView.m */; };
 		36A00F601C33B2F000FF5097 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 36A00F5F1C33B2F000FF5097 /* main.m */; };
 		36A00F631C33B2F000FF5097 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 36A00F621C33B2F000FF5097 /* AppDelegate.m */; };
 		36A00F661C33B2F000FF5097 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 36A00F651C33B2F000FF5097 /* ViewController.m */; };
@@ -15,6 +16,8 @@
 		36A00F6E1C33B2F000FF5097 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 36A00F6C1C33B2F000FF5097 /* LaunchScreen.storyboard */; };
 		36A00F791C33B2F000FF5097 /* KLTloadingDemoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 36A00F781C33B2F000FF5097 /* KLTloadingDemoTests.m */; };
 		36A00F841C33B2F000FF5097 /* KLTloadingDemoUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 36A00F831C33B2F000FF5097 /* KLTloadingDemoUITests.m */; };
+		36A00F941C33B35C00FF5097 /* KLTLoadingStateView.m in Sources */ = {isa = PBXBuildFile; fileRef = 36A00F931C33B35C00FF5097 /* KLTLoadingStateView.m */; };
+		36A00F971C33BC6B00FF5097 /* KLTMediaTimingFunctionMgr.m in Sources */ = {isa = PBXBuildFile; fileRef = 36A00F961C33BC6B00FF5097 /* KLTMediaTimingFunctionMgr.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +54,12 @@
 		36A00F7F1C33B2F000FF5097 /* KLTloadingDemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KLTloadingDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		36A00F831C33B2F000FF5097 /* KLTloadingDemoUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KLTloadingDemoUITests.m; sourceTree = "<group>"; };
 		36A00F851C33B2F000FF5097 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		36A00F921C33B35C00FF5097 /* KLTLoadingStateView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KLTLoadingStateView.h; sourceTree = "<group>"; };
+		36A00F931C33B35C00FF5097 /* KLTLoadingStateView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KLTLoadingStateView.m; sourceTree = "<group>"; };
+		36A00F951C33BC6B00FF5097 /* KLTMediaTimingFunctionMgr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KLTMediaTimingFunctionMgr.h; sourceTree = "<group>"; };
+		36A00F961C33BC6B00FF5097 /* KLTMediaTimingFunctionMgr.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KLTMediaTimingFunctionMgr.m; sourceTree = "<group>"; };
+		36A00F991C33DCB100FF5097 /* KLTLoadingView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KLTLoadingView.h; sourceTree = "<group>"; };
+		36A00F9A1C33DCB100FF5097 /* KLTLoadingView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KLTLoadingView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,6 +110,7 @@
 		36A00F5D1C33B2F000FF5097 /* KLTloadingDemo */ = {
 			isa = PBXGroup;
 			children = (
+				36A00F911C33B2FD00FF5097 /* Loading */,
 				36A00F611C33B2F000FF5097 /* AppDelegate.h */,
 				36A00F621C33B2F000FF5097 /* AppDelegate.m */,
 				36A00F641C33B2F000FF5097 /* ViewController.h */,
@@ -138,6 +148,19 @@
 				36A00F851C33B2F000FF5097 /* Info.plist */,
 			);
 			path = KLTloadingDemoUITests;
+			sourceTree = "<group>";
+		};
+		36A00F911C33B2FD00FF5097 /* Loading */ = {
+			isa = PBXGroup;
+			children = (
+				36A00F921C33B35C00FF5097 /* KLTLoadingStateView.h */,
+				36A00F931C33B35C00FF5097 /* KLTLoadingStateView.m */,
+				36A00F951C33BC6B00FF5097 /* KLTMediaTimingFunctionMgr.h */,
+				36A00F961C33BC6B00FF5097 /* KLTMediaTimingFunctionMgr.m */,
+				36A00F991C33DCB100FF5097 /* KLTLoadingView.h */,
+				36A00F9A1C33DCB100FF5097 /* KLTLoadingView.m */,
+			);
+			name = Loading;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -271,7 +294,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				36A00F661C33B2F000FF5097 /* ViewController.m in Sources */,
+				3612DE7B1C3D3CF2000BD6D5 /* KLTLoadingView.m in Sources */,
+				36A00F941C33B35C00FF5097 /* KLTLoadingStateView.m in Sources */,
 				36A00F631C33B2F000FF5097 /* AppDelegate.m in Sources */,
+				36A00F971C33BC6B00FF5097 /* KLTMediaTimingFunctionMgr.m in Sources */,
 				36A00F601C33B2F000FF5097 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -498,6 +524,7 @@
 				36A00F8A1C33B2F000FF5097 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		36A00F8B1C33B2F000FF5097 /* Build configuration list for PBXNativeTarget "KLTloadingDemoTests" */ = {
 			isa = XCConfigurationList;
@@ -506,6 +533,7 @@
 				36A00F8D1C33B2F000FF5097 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		36A00F8E1C33B2F000FF5097 /* Build configuration list for PBXNativeTarget "KLTloadingDemoUITests" */ = {
 			isa = XCConfigurationList;
@@ -514,6 +542,7 @@
 				36A00F901C33B2F000FF5097 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
