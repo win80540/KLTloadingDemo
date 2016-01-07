@@ -107,9 +107,11 @@ static const CGFloat padding = 5.0f;
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
     [CATransaction setCompletionBlock:^{
-        [wSelf __animationFinished];
+        [wSelf __animationFinished:KLTLoadingStateStart];
         if (![wSelf isStop]) {
-            wSelf.state = KLTLoadingStateLoading;
+            if (wSelf.state == KLTLoadingStateStart) {
+                wSelf.state = KLTLoadingStateLoading;
+            }
             [wSelf startAnimationWithState:KLTLoadingStateLoading];
         }
     }];
@@ -198,7 +200,7 @@ static const CGFloat padding = 5.0f;
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
     [CATransaction setCompletionBlock:^{
-        [wSelf __animationFinished];
+        [wSelf __animationFinished:KLTLoadingStateLoading];
         if (![wSelf isStop]) {
 #ifndef __OPTIMIZE__
             //调试代码
@@ -300,7 +302,7 @@ static const CGFloat padding = 5.0f;
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
     [CATransaction setCompletionBlock:^{
-        [wSelf __animationFinished];
+        [wSelf __animationFinished:KLTLoadingStateSuccess];
         if (![wSelf isStop]) {
             
         }
@@ -346,9 +348,9 @@ static const CGFloat padding = 5.0f;
     _bgShapeLayer = bgShapeLayer;
 }
 
-- (void)__animationFinished{
+- (void)__animationFinished:(KLTLoadingStateFlag)state{
     if([self.delegate respondsToSelector:@selector(kltLoadingView:animationFinishedWithState:)]){
-        [self.delegate kltLoadingView:self animationFinishedWithState:self.state];
+        [self.delegate kltLoadingView:self animationFinishedWithState:state];
     }
 }
 #pragma mark Getter
@@ -375,5 +377,3 @@ static const CGFloat padding = 5.0f;
 }
 
 @end
-
-
