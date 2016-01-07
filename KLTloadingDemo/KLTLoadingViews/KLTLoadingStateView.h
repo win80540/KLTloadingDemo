@@ -57,4 +57,8 @@ typedef enum {
  @brief 开始指定状态动画
  */
 - (void)startAnimationWithState:(KLTLoadingStateFlag)state;
+/*
+ @brief 停止动画
+ */
+- (void)stop;
 @end

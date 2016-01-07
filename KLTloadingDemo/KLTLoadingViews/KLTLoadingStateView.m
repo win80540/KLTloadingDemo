@@ -15,6 +15,7 @@ static const CGFloat padding = 5.0f;
     CALayer *_borderLayer;
     CALayer *_successLayer;
 }
+@property (assign,nonatomic) BOOL isStop;
 @end
 
 @implementation KLTLoadingStateView
@@ -47,6 +48,7 @@ static const CGFloat padding = 5.0f;
 }
 
 - (void)start{
+    self.isStop = NO;
     self.state = KLTLoadingStateStart;
     [self startAnimationWithState:self.state];
 }
@@ -69,12 +71,14 @@ static const CGFloat padding = 5.0f;
             break;
     }
 }
-
+- (void)stop{
+    self.isStop = YES;
+}
 - (void)__satrtAnimation{
     [_bgShapeLayer removeFromSuperlayer];
     [_borderLayer removeFromSuperlayer];
     [_successLayer removeFromSuperlayer];
- 
+    
     CGPoint centerP = CGPointMake(CGRectGetMidX(self.bounds), CGRectGetMidY(self.bounds));
     CGFloat radius = MIN(self.bounds.size.width, self.bounds.size.height)/2.0 - padding;
     if (radius<=0) {
@@ -104,8 +108,10 @@ static const CGFloat padding = 5.0f;
     [CATransaction setDisableActions:YES];
     [CATransaction setCompletionBlock:^{
         [wSelf __animationFinished];
-        wSelf.state = KLTLoadingStateLoading;
-        [wSelf startAnimationWithState:KLTLoadingStateLoading];
+        if (![wSelf isStop]) {
+            wSelf.state = KLTLoadingStateLoading;
+            [wSelf startAnimationWithState:KLTLoadingStateLoading];
+        }
     }];
     {
         CABasicAnimation * scaleAnim = [CABasicAnimation animationWithKeyPath:@"transform"];
@@ -125,6 +131,7 @@ static const CGFloat padding = 5.0f;
         CAAnimationGroup *animGroup = [CAAnimationGroup animation];
         animGroup.animations = @[scaleAnim,opacityAnim];
         animGroup.duration = 0.6;
+        
         [bgShapeLayer addAnimation:animGroup forKey:@"anim"];
     }
     {
@@ -135,6 +142,7 @@ static const CGFloat padding = 5.0f;
         scaleAnim.beginTime = [maskShapeLayer convertTime:CACurrentMediaTime() fromLayer:nil] + 0.2;
         scaleAnim.removedOnCompletion = NO;
         scaleAnim.timingFunction = [KLTMediaTimingFunctionMgr getEaseOutQuintFunction];
+        
         [maskShapeLayer addAnimation:scaleAnim forKey:@"anim"];
     }
     
@@ -143,13 +151,36 @@ static const CGFloat padding = 5.0f;
 }
 
 - (void)__loadingAnimation{
+    [_bgShapeLayer removeFromSuperlayer];
     [_borderLayer removeFromSuperlayer];
+    [_successLayer removeFromSuperlayer];
     
     CGPoint centerP = CGPointMake(CGRectGetMidX(self.bounds), CGRectGetMidY(self.bounds));
     CGFloat radius = MIN(self.bounds.size.width, self.bounds.size.height)/2.0 - padding;
     if (radius<=0) {
         return;
     }
+    
+    CAShapeLayer *bgShapeLayer = [CAShapeLayer layer];
+    bgShapeLayer.bounds = self.bounds;
+    bgShapeLayer.position = centerP;
+    bgShapeLayer.lineWidth = self.borderWidth;
+    bgShapeLayer.strokeColor = self.bgBorderColor.CGColor;
+    bgShapeLayer.fillColor = self.bgBorderColor.CGColor;
+    UIBezierPath *path = [UIBezierPath bezierPathWithArcCenter:centerP radius:radius startAngle:-M_PI_2 endAngle:M_PI+M_PI_2    clockwise:YES];
+    bgShapeLayer.path = path.CGPath;
+    [self.layer addSublayer:bgShapeLayer];
+    
+    CAShapeLayer *maskShapeLayer = [CAShapeLayer layer];
+    maskShapeLayer.bounds = self.bounds;
+    maskShapeLayer.position = centerP;
+    maskShapeLayer.lineWidth = self.borderWidth;
+    maskShapeLayer.fillColor = [UIColor whiteColor].CGColor;
+    path = [UIBezierPath bezierPathWithArcCenter:centerP radius:radius-self.borderWidth/2.0 startAngle:-M_PI_2 endAngle:M_PI+M_PI_2    clockwise:YES];
+    maskShapeLayer.path = path.CGPath;
+    [bgShapeLayer addSublayer:maskShapeLayer];
+    
+    
     CAShapeLayer *borderShapeLayer = [CAShapeLayer layer];
     borderShapeLayer.bounds = self.bounds;
     borderShapeLayer.position = centerP;
@@ -157,7 +188,7 @@ static const CGFloat padding = 5.0f;
     borderShapeLayer.strokeColor = self.successColor.CGColor;
     borderShapeLayer.fillColor = [UIColor clearColor].CGColor;
     borderShapeLayer.lineCap = kCALineCapRound;
-    UIBezierPath *path = [UIBezierPath bezierPathWithArcCenter:centerP radius:radius startAngle:-M_PI_2 endAngle:M_PI+M_PI_2    clockwise:YES];
+    path = [UIBezierPath bezierPathWithArcCenter:centerP radius:radius startAngle:-M_PI_2 endAngle:M_PI+M_PI_2    clockwise:YES];
     borderShapeLayer.path = path.CGPath;
     borderShapeLayer.strokeStart = 0.0;
     borderShapeLayer.strokeEnd = 0.0;
@@ -168,16 +199,18 @@ static const CGFloat padding = 5.0f;
     [CATransaction setDisableActions:YES];
     [CATransaction setCompletionBlock:^{
         [wSelf __animationFinished];
+        if (![wSelf isStop]) {
 #ifndef __OPTIMIZE__
-        //调试代码
-        static int count = 0;
-        count ++;
-        if (count > 3) {
-            wSelf.state = KLTLoadingStateSuccess;
-            count = 0;
-        }
+            //调试代码
+            static int count = 0;
+            count ++;
+            if (count > 3) {
+                wSelf.state = KLTLoadingStateSuccess;
+                count = 0;
+            }
 #endif
-        [wSelf startAnimationWithState:wSelf.state];
+            [wSelf startAnimationWithState:wSelf.state];
+        }
     }];
     {
         CABasicAnimation * startAnim = [CABasicAnimation animationWithKeyPath:@"strokeStart"];
@@ -201,9 +234,11 @@ static const CGFloat padding = 5.0f;
     }
     [CATransaction commit];
     _borderLayer = borderShapeLayer;
+    _bgShapeLayer = bgShapeLayer;
 }
 
 - (void)__successAnimation{
+    [_bgShapeLayer removeFromSuperlayer];
     [_borderLayer removeFromSuperlayer];
     [_successLayer removeFromSuperlayer];
     
@@ -213,6 +248,25 @@ static const CGFloat padding = 5.0f;
         return;
     }
     
+    CAShapeLayer *bgShapeLayer = [CAShapeLayer layer];
+    bgShapeLayer.bounds = self.bounds;
+    bgShapeLayer.position = centerP;
+    bgShapeLayer.lineWidth = self.borderWidth;
+    bgShapeLayer.strokeColor = self.bgBorderColor.CGColor;
+    bgShapeLayer.fillColor = self.bgBorderColor.CGColor;
+    UIBezierPath *path = [UIBezierPath bezierPathWithArcCenter:centerP radius:radius startAngle:-M_PI_2 endAngle:M_PI+M_PI_2    clockwise:YES];
+    bgShapeLayer.path = path.CGPath;
+    [self.layer addSublayer:bgShapeLayer];
+    
+    CAShapeLayer *maskShapeLayer = [CAShapeLayer layer];
+    maskShapeLayer.bounds = self.bounds;
+    maskShapeLayer.position = centerP;
+    maskShapeLayer.lineWidth = self.borderWidth;
+    maskShapeLayer.fillColor = [UIColor whiteColor].CGColor;
+    path = [UIBezierPath bezierPathWithArcCenter:centerP radius:radius-self.borderWidth/2.0 startAngle:-M_PI_2 endAngle:M_PI+M_PI_2    clockwise:YES];
+    maskShapeLayer.path = path.CGPath;
+    [bgShapeLayer addSublayer:maskShapeLayer];
+    
     CAShapeLayer *borderShapeLayer = [CAShapeLayer layer];
     borderShapeLayer.bounds = self.bounds;
     borderShapeLayer.position = centerP;
@@ -220,7 +274,7 @@ static const CGFloat padding = 5.0f;
     borderShapeLayer.strokeColor = self.successColor.CGColor;
     borderShapeLayer.fillColor = [UIColor clearColor].CGColor;
     borderShapeLayer.lineCap = kCALineCapRound;
-    UIBezierPath *path = [UIBezierPath bezierPathWithArcCenter:centerP radius:radius startAngle:-M_PI_2 endAngle:M_PI+M_PI_2    clockwise:YES];
+    path = [UIBezierPath bezierPathWithArcCenter:centerP radius:radius startAngle:-M_PI_2 endAngle:M_PI+M_PI_2    clockwise:YES];
     borderShapeLayer.path = path.CGPath;
     borderShapeLayer.strokeStart = 0.0;
     borderShapeLayer.strokeEnd = 0.0;
@@ -247,6 +301,9 @@ static const CGFloat padding = 5.0f;
     [CATransaction setDisableActions:YES];
     [CATransaction setCompletionBlock:^{
         [wSelf __animationFinished];
+        if (![wSelf isStop]) {
+            
+        }
     }];
     {
         CABasicAnimation * endAnim = [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
@@ -286,6 +343,7 @@ static const CGFloat padding = 5.0f;
     
     _borderLayer = borderShapeLayer;
     _successLayer = successShapeLayer;
+    _bgShapeLayer = bgShapeLayer;
 }
 
 - (void)__animationFinished{
@@ -317,3 +375,5 @@ static const CGFloat padding = 5.0f;
 }
 
 @end
+
+
