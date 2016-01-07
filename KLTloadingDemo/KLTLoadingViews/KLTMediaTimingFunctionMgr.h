@@ -11,10 +11,20 @@
 
 #import <Foundation/Foundation.h>
 #import <QuartzCore/QuartzCore.h> 
+
+typedef enum{
+    kKLTMediaTimingFunctionEaseOutQuint = 0,
+    kKLTMediaTimingFunctionEaseOutQuart = 1,
+    kKLTMediaTimingFunctionEaseOutQuad = 2
+} kKLTMediaTimingFunction;
+
+
 @interface KLTMediaTimingFunctionMgr : NSObject
+
++ (CAMediaTimingFunction *)getMediaTimingFunctionForKey:(kKLTMediaTimingFunction)key;
 
 + (CAMediaTimingFunction *)getEaseOutQuintFunction;
 + (CAMediaTimingFunction *)getEaseOutQuartFunction;
 + (CAMediaTimingFunction *)getEaseOutQuadFunction;
-+ (CAMediaTimingFunction *)getEaseOutElasticFunction;
+
 @end

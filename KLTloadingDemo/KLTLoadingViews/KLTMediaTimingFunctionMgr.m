@@ -9,6 +9,19 @@
 #import "KLTMediaTimingFunctionMgr.h"
 
 @implementation KLTMediaTimingFunctionMgr
++ (CAMediaTimingFunction *)getMediaTimingFunctionForKey:(kKLTMediaTimingFunction)key{
+    switch (key) {
+        case kKLTMediaTimingFunctionEaseOutQuint:
+            return [self getEaseOutQuintFunction];
+        case kKLTMediaTimingFunctionEaseOutQuart:
+            return [self getEaseOutQuartFunction];
+        case kKLTMediaTimingFunctionEaseOutQuad:
+            return [self getEaseOutQuadFunction];
+        default:
+            break;
+    }
+}
+
 + (CAMediaTimingFunction *)getEaseOutQuintFunction{
     static CAMediaTimingFunction * timingF = nil;
     static dispatch_once_t onceToken;
@@ -33,15 +46,6 @@
     });
     return timingF;
 }
-+ (CAMediaTimingFunction *)getEaseOutElasticFunction{
-    return nil;
-    
-//    static CAMediaTimingFunction * timingF = nil;
-//    static dispatch_once_t onceToken;
-//    dispatch_once(&onceToken, ^{
-//        timingF = [CAMediaTimingFunction functionWithControlPoints:0.455 :0.03 :0.515 :0.955];
-//    });
-//    return timingF;
-}
+
 
 @end
