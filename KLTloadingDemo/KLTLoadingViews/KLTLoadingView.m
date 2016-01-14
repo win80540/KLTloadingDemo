@@ -66,10 +66,28 @@ static CGPoint control2Rates[2][4] = {
 }
 - (void)__initializeSelf{
     self.lineWidth = 0.5;
+    self.isAnimating = NO;
 }
 
 - (void)start{
     [self __start];
+    self.isAnimating = YES;
+}
+
+- (void)stop{
+    [self __stopAnimForLayer:_borderLayer];
+    [self __stopAnimForLayer:_centerLayer];
+    self.isAnimating = NO;
+}
+
+- (void)__stopAnimForLayer:(CALayer *)layer{
+    if (layer == nil) {
+        return;
+    }
+    [layer removeAllAnimations];
+    for (CALayer *itemLayer in layer.sublayers) {
+        [self __stopAnimForLayer:itemLayer];
+    }
 }
 
 - (void)__start{
@@ -78,7 +96,7 @@ static CGPoint control2Rates[2][4] = {
 
 
     CGPoint centerP = CGPointMake(CGRectGetMidX(self.bounds), CGRectGetMidY(self.bounds));
-    CGFloat width = MIN(self.bounds.size.width, self.bounds.size.height)/2.0;
+    CGFloat width = MIN(self.bounds.size.width, self.bounds.size.height);
     NSMutableArray<CAShapeLayer *> *centerSegements = [NSMutableArray arrayWithCapacity:4];
     NSMutableArray<CAShapeLayer *> *borderSegements = [NSMutableArray arrayWithCapacity:4];
     NSMutableArray<NSMutableArray<UIBezierPath *> *> *pathStates = [NSMutableArray arrayWithCapacity:4];

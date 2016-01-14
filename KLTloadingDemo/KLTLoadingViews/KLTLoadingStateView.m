@@ -149,6 +149,8 @@ static const CGFloat padding = 5.0f;
     }
     
     [CATransaction commit];
+    [self __animationStarted:KLTLoadingStateStart];
+    
     _bgShapeLayer = bgShapeLayer;
 }
 
@@ -235,6 +237,8 @@ static const CGFloat padding = 5.0f;
         [borderShapeLayer addAnimation:endAnim forKey:@"animEnd"];
     }
     [CATransaction commit];
+    [self __animationStarted:KLTLoadingStateLoading];
+    
     _borderLayer = borderShapeLayer;
     _bgShapeLayer = bgShapeLayer;
 }
@@ -342,12 +346,18 @@ static const CGFloat padding = 5.0f;
         [successShapeLayer addAnimation:endAnim forKey:@"animEnd"];
     }
     [CATransaction commit];
+    [self __animationStarted:KLTLoadingStateSuccess];
     
     _borderLayer = borderShapeLayer;
     _successLayer = successShapeLayer;
     _bgShapeLayer = bgShapeLayer;
 }
 
+- (void)__animationStarted:(KLTLoadingStateFlag)state{
+    if ([self.delegate respondsToSelector:@selector(kltLoadingView:animationStartedWithState:)]) {
+        [self.delegate kltLoadingView:self animationStartedWithState:state];
+    }
+}
 - (void)__animationFinished:(KLTLoadingStateFlag)state{
     if([self.delegate respondsToSelector:@selector(kltLoadingView:animationFinishedWithState:)]){
         [self.delegate kltLoadingView:self animationFinishedWithState:state];

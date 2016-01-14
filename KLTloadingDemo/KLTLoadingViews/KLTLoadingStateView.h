@@ -18,6 +18,7 @@ typedef enum {
 @class KLTLoadingStateView;
 @protocol KLTLoadingViewAnimationDelegate <NSObject>
 @optional
+- (void)kltLoadingView:(KLTLoadingStateView *)view animationStartedWithState:(KLTLoadingStateFlag)state;
 - (void)kltLoadingView:(KLTLoadingStateView *)view animationFinishedWithState:(KLTLoadingStateFlag)state;
 @end
 

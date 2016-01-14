@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 
 @interface KLTLoadingView : UIView
+@property (assign,nonatomic) BOOL isAnimating;
 /*
  @brief 线宽
  */
@@ -21,4 +22,8 @@
  @brief 开始动画
  */
 - (void)start;
+/*
+ @brief 结束动画
+ */
+- (void)stop;
 @end
