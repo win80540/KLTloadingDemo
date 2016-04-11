@@ -15,7 +15,8 @@
 typedef enum{
     kKLTMediaTimingFunctionEaseOutQuint = 0,
     kKLTMediaTimingFunctionEaseOutQuart = 1,
-    kKLTMediaTimingFunctionEaseOutQuad = 2
+    kKLTMediaTimingFunctionEaseOutQuad = 2,
+    kKLTMediaTimingFunctionEaseOutCubic = 3
 } kKLTMediaTimingFunction;
 
 
@@ -26,5 +27,6 @@ typedef enum{
 + (CAMediaTimingFunction *)getEaseOutQuintFunction;
 + (CAMediaTimingFunction *)getEaseOutQuartFunction;
 + (CAMediaTimingFunction *)getEaseOutQuadFunction;
++ (CAMediaTimingFunction *)getEaseOutCubicFunction;
 
 @end

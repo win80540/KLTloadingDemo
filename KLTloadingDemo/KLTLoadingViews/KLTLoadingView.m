@@ -43,9 +43,7 @@ static CGPoint control2Rates[2][4] = {
 }
 @end
 @implementation KLTLoadingView
-- (void)awakeFromNib{
-    [self __initializeSelf];
-}
+
 - (instancetype)init{
     if (self = [super init]) {
         [self __initializeSelf];

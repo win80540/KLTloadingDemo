@@ -12,5 +12,5 @@
 #import "KLTMediaTimingFunctionMgr.h"
 #import "KLTLoadingView.h"
 #import "KLTLoadingStateView.h"
-
+#import "KLTLoadingViewPTC.h"
 #endif /* KLTLoadingViews_h */

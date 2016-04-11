@@ -20,9 +20,6 @@ static const CGFloat padding = 5.0f;
 
 @implementation KLTLoadingStateView
 
-- (void)awakeFromNib{
-    [self __initializeSelf];
-}
 - (instancetype)init{
     if (self = [super init]) {
         [self __initializeSelf];

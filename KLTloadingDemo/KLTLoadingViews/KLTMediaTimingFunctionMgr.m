@@ -17,6 +17,8 @@
             return [self getEaseOutQuartFunction];
         case kKLTMediaTimingFunctionEaseOutQuad:
             return [self getEaseOutQuadFunction];
+        case kKLTMediaTimingFunctionEaseOutCubic:
+            return [self getEaseOutCubicFunction];
         default:
             break;
     }
@@ -46,6 +48,13 @@
     });
     return timingF;
 }
-
++ (CAMediaTimingFunction *)getEaseOutCubicFunction{
+    static CAMediaTimingFunction * timingF = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        timingF = [CAMediaTimingFunction functionWithControlPoints:0.215 :0.61 :0.355 :0.1];
+    });
+    return timingF;
+}
 
 @end
