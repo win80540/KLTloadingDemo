@@ -17,6 +17,7 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
  @brief 停止动画标记
  */
 @property (nonatomic, assign) BOOL shouldStopAnimation;
+@property (nonatomic, assign) BOOL stopAnimationImmediately;
 @property (nonatomic, strong) NSMutableArray<CAShapeLayer *> *shapeLayers;
 @property (nonatomic, strong) void(^endCallback)();
 
@@ -292,12 +293,18 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
 
 - (void)startIndeterminateAnimation
 {
+    if (self.isAnimating) {
+        [self stopIndeterminateAnimationImmediately];
+    }
     self.shouldStopAnimation = NO;
+    self.stopAnimationImmediately = NO;
+    self.isAnimating = YES;
     [self __beginAnimation];
 }
 - (void)__beginAnimation{
-    self.isAnimating = YES;
-    
+    if (self.stopAnimationImmediately) {
+        return;
+    }
     [self.layer removeAnimationForKey:kProgressAnimation];
     [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         [obj removeAllAnimations];
@@ -344,6 +351,9 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
     [CATransaction commit];
 }
 - (void)__circleAnimationBegain{
+    if (self.stopAnimationImmediately) {
+        return;
+    }
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
     [CATransaction setCompletionBlock:^{
@@ -399,6 +409,9 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
     [CATransaction commit];
 }
 - (void)__circleAnimationEnd{
+    if (self.stopAnimationImmediately) {
+        return;
+    }
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
     [CATransaction setCompletionBlock:^{
@@ -461,6 +474,9 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
     [CATransaction commit];
 }
 - (void)__circleAnimation{
+    if (self.stopAnimationImmediately) {
+        return;
+    }
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
     [CATransaction setCompletionBlock:^{
@@ -520,6 +536,9 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
     [CATransaction commit];
 }
 - (void)__endAnimation{
+    if (self.stopAnimationImmediately) {
+        return;
+    }
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
     [CATransaction setCompletionBlock:^{
@@ -567,5 +586,22 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
 
     self.endCallback = callback;
     self.shouldStopAnimation = YES;
+}
+- (void)stopIndeterminateAnimationImmediately{
+    if (!self.isAnimating) {
+        return;
+    }
+    
+    self.stopAnimationImmediately = YES;
+}
+- (void)setStopAnimationImmediately:(BOOL)stopAnimationImmediately{
+    _stopAnimationImmediately = stopAnimationImmediately;
+    self.isAnimating = NO;
+    [self.layer removeAllAnimations];
+    [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [obj removeAllAnimations];
+    }];
+    self.progress = 0;
+    self.layer.opacity = 0;
 }
 @end

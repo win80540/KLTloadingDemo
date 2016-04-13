@@ -54,4 +54,7 @@
 - (void)stopIndeterminateAnimation;
 
 - (void)stopIndeterminateAnimationWithCallBack:(void(^)())callback;
+
+- (void)stopIndeterminateAnimationImmediately;
+
 @end
