@@ -9,15 +9,14 @@
 #import "KLTLoadingViewPTC.h"
 #import "KLTMediaTimingFunctionMgr.h"
 
-#define DEGREES_TO_RADIANS(x) (x)/180.0*M_PI
-#define RADIANS_TO_DEGREES(x) (x)/M_PI*180.0
-
 NSString * const kProgressAnimation = @"kProgressAnimation";
 NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
 
 @interface KLTLoadingViewPTC ()
-
-@property (nonatomic, assign) BOOL isAnimating;
+/*
+ @brief 停止动画标记
+ */
+@property (nonatomic, assign) BOOL shouldStopAnimation;
 @property (nonatomic, strong) NSMutableArray<CAShapeLayer *> *shapeLayers;
 @property (nonatomic, strong) void(^endCallback)();
 
@@ -99,19 +98,21 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
 }
 - (UIBezierPath *)__getIndeterminatePathLineForIdx:(NSUInteger)idx space:(CGFloat)space andProgress:(CGFloat)progress{
     if (space*2>M_PI_2) {
-        space = M_PI_2*0.49;
+        space = M_PI_2*0.499;
     }else if(space<0){
         space = M_PI_2*0.1;
     }
     CGFloat bigRadius = (self.distance_Far - (self.distance_Far - self.distance_Mid)*progress)/2.0;
-    CGFloat radiusDelta = 0.5;
+    CGFloat radiusDelta = _pointRadiu_Small + (_pointRadiu_Big-_pointRadiu_Small)*progress;
     CGFloat controlAngel = asin((radiusDelta/2)/(bigRadius-radiusDelta))*2;
     UIBezierPath *bezierPath = [UIBezierPath bezierPath];
-    [bezierPath moveToPoint:[self __getPointForAngel:idx*M_PI_2+space withDistance:bigRadius]];
-    [bezierPath addQuadCurveToPoint:[self __getPointForAngel:(idx+1)*M_PI_2-space withDistance:bigRadius] controlPoint:[self __getPointForAngel:idx*M_PI_2+M_PI_2/2.0 withDistance:bigRadius/cos(M_PI_2/2-space)]];
-    [bezierPath addQuadCurveToPoint:[self __getPointForAngel:(idx+1)*M_PI_2-space withDistance:bigRadius-radiusDelta] controlPoint:[self __getPointForAngel:(idx+1)*M_PI_2-space+controlAngel withDistance:bigRadius-radiusDelta/2.0]];
-    [bezierPath addQuadCurveToPoint:[self __getPointForAngel:idx*M_PI_2+space withDistance:bigRadius-radiusDelta] controlPoint:[self __getPointForAngel:idx*M_PI_2+M_PI_2/2.0 withDistance:(bigRadius-radiusDelta)/cos(M_PI_2/2-space)]];
-    [bezierPath addQuadCurveToPoint:[self __getPointForAngel:idx*M_PI_2+space withDistance:bigRadius] controlPoint:[self __getPointForAngel:idx*M_PI_2+space-controlAngel withDistance:bigRadius-radiusDelta/2.0]];
+    [bezierPath moveToPoint:[self __getPointForAngel:idx*M_PI_2-M_PI_4+space withDistance:bigRadius]];
+    [bezierPath addQuadCurveToPoint:[self __getPointForAngel:(idx+1)*M_PI_2-M_PI_4-space withDistance:bigRadius] controlPoint:[self __getPointForAngel:idx*M_PI_2-M_PI_4+M_PI_2/2.0 withDistance:bigRadius/cos(M_PI_2/2-space)]];
+//    [bezierPath addLineToPoint:[self __getPointForAngel:(idx+1)*M_PI_2-space withDistance:bigRadius-radiusDelta]];
+    [bezierPath addQuadCurveToPoint:[self __getPointForAngel:(idx+1)*M_PI_2-M_PI_4-space withDistance:bigRadius-radiusDelta] controlPoint:[self __getPointForAngel:(idx+1)*M_PI_2-M_PI_4-space+controlAngel withDistance:bigRadius-radiusDelta/2.0]];
+    [bezierPath addQuadCurveToPoint:[self __getPointForAngel:idx*M_PI_2-M_PI_4+space withDistance:bigRadius-radiusDelta] controlPoint:[self __getPointForAngel:idx*M_PI_2-M_PI_4+M_PI_2/2.0 withDistance:(bigRadius-radiusDelta)/cos(M_PI_2/2-space)]];
+    [bezierPath addQuadCurveToPoint:[self __getPointForAngel:idx*M_PI_2-M_PI_4+space withDistance:bigRadius] controlPoint:[self __getPointForAngel:idx*M_PI_2-M_PI_4+space-controlAngel withDistance:bigRadius-radiusDelta/2.0]];
+//    [bezierPath addLineToPoint:[self __getPointForAngel:idx*M_PI_2+space withDistance:bigRadius]];
     return bezierPath;
 }
 - (CGPoint)__getProgressPostionForIdx:(NSUInteger)idx withProgress:(CGFloat)progress{
@@ -276,7 +277,7 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
 
 - (void)tintColorDidChange
 {
-    __weak typeof(&*self) weakSelf;
+    __weak typeof(&*self) weakSelf = self;
     [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull shapeLayer, NSUInteger idx, BOOL * _Nonnull stop) {
         shapeLayer.strokeColor = weakSelf.progressTintColor.CGColor;
         shapeLayer.fillColor = weakSelf.progressTintColor.CGColor;
@@ -351,12 +352,16 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
     
     [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         CAShapeLayer *presentationLayer = obj.presentationLayer?obj.presentationLayer:obj;
-        UIBezierPath *dPath1 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.4 andProgress:0.1];
-        UIBezierPath *dPath2 = [self __getIndeterminatePathLineForIdx:idx withProgress:0];
+        UIBezierPath *dPath1 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.45 andProgress:0];
+        UIBezierPath *dPath2 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.35 andProgress:0];
+        UIBezierPath *dPath3 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.25 andProgress:0];
+        UIBezierPath *dPath4 = [self __getIndeterminatePathLineForIdx:idx withProgress:0];
         CAKeyframeAnimation *keyAnimation = [CAKeyframeAnimation animationWithKeyPath:@"path"];
         keyAnimation.keyTimes = @[
                                   @0,
                                   @0.1,
+                                  @0.35,
+                                  @0.55,
                                   @0.75,
                                   @1
                                   ];
@@ -364,10 +369,12 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
                                 (__bridge id)(presentationLayer.path),
                                 (__bridge id)dPath1.CGPath,
                                 (__bridge id)dPath2.CGPath,
-                                (__bridge id)dPath2.CGPath,
+                                (__bridge id)dPath3.CGPath,
+                                (__bridge id)dPath4.CGPath,
+                                (__bridge id)dPath4.CGPath,
                                 ];
         keyAnimation.duration = 0.26;
-        obj.path = dPath2.CGPath;
+        obj.path = dPath4.CGPath;
         [obj addAnimation:keyAnimation forKey:kIndeterminateAnimation];
     }];
     
@@ -392,7 +399,6 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
             [self __circleAnimation];
         }
     }];
-    
     CABasicAnimation *rotateAnim = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
     rotateAnim.fromValue = @(M_PI_2*3);
     rotateAnim.toValue = @(M_PI_2*4);
@@ -403,14 +409,20 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
     
     [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         UIBezierPath *dPath1 = [self __getIndeterminatePathLineForIdx:idx withProgress:0];
-        UIBezierPath *dPath2 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.45 andProgress:0.3];
-        UIBezierPath *dPath3 = [self __getIndeterminatePathForIdx:idx withProgress:0.8];
-        UIBezierPath *dPath4 = [self __getIndeterminatePathForIdx:idx withProgress:1];
+        UIBezierPath *dPath2 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.15 andProgress:0.1];
+        UIBezierPath *dPath3 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.35 andProgress:0.3];
+        UIBezierPath *dPath4 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.45 andProgress:0.5];
+        UIBezierPath *dPath5 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.45 andProgress:0.8];
+        UIBezierPath *dPath6 = [self __getIndeterminatePathForIdx:idx withProgress:0.81];
+        UIBezierPath *dPath7 = [self __getIndeterminatePathForIdx:idx withProgress:1];
         CAKeyframeAnimation *keyAnimation = [CAKeyframeAnimation animationWithKeyPath:@"path"];
         keyAnimation.keyTimes = @[
                                   @0,
+                                  @0.1,
                                   @0.3,
+                                  @0.5,
                                   @0.8,
+                                  @0.81,
                                   @1
                                   ];
         keyAnimation.values = @[
@@ -418,10 +430,13 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
                                 (__bridge id)dPath2.CGPath,
                                 (__bridge id)dPath3.CGPath,
                                 (__bridge id)dPath4.CGPath,
+                                (__bridge id)dPath5.CGPath,
+                                (__bridge id)dPath6.CGPath,
+                                (__bridge id)dPath7.CGPath,
                                 ];
         keyAnimation.duration = 0.2;
         keyAnimation.timingFunction = [KLTMediaTimingFunctionMgr getMediaTimingFunctionForKey:kKLTMediaTimingFunctionEaseOutCubic];
-        obj.path = dPath4.CGPath;
+        obj.path = dPath7.CGPath;
         [obj addAnimation:keyAnimation forKey:kIndeterminateAnimation];
     }];
     
@@ -453,14 +468,20 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
     
     [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         UIBezierPath *dPath1 = [self __getIndeterminatePathForIdx:idx withProgress:1];
-        UIBezierPath *dPath2 = [self __getIndeterminatePathForIdx:idx withProgress:0.8];
-        UIBezierPath *dPath3 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.45 andProgress:0.3];
-        UIBezierPath *dPath4 = [self __getIndeterminatePathLineForIdx:idx withProgress:0];
+        UIBezierPath *dPath2 = [self __getIndeterminatePathForIdx:idx withProgress:0.81];
+        UIBezierPath *dPath3 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.45 andProgress:0.8];
+        UIBezierPath *dPath4 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.45 andProgress:0.5];
+        UIBezierPath *dPath5 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.35 andProgress:0.3];
+        UIBezierPath *dPath6 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.15 andProgress:0.1];
+        UIBezierPath *dPath7 = [self __getIndeterminatePathLineForIdx:idx withProgress:0];
         CAKeyframeAnimation *keyAnimation = [CAKeyframeAnimation animationWithKeyPath:@"path"];
         keyAnimation.keyTimes = @[
                                   @0,
                                   @0.2,
+                                  @0.21,
+                                  @0.5,
                                   @0.7,
+                                  @0.9,
                                   @1
                                   ];
         keyAnimation.values = @[
@@ -468,10 +489,13 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
                                 (__bridge id)dPath2.CGPath,
                                 (__bridge id)dPath3.CGPath,
                                 (__bridge id)dPath4.CGPath,
+                                (__bridge id)dPath5.CGPath,
+                                (__bridge id)dPath6.CGPath,
+                                (__bridge id)dPath7.CGPath,
                                 ];
         keyAnimation.duration = 0.2;
         keyAnimation.timingFunction = [KLTMediaTimingFunctionMgr getMediaTimingFunctionForKey:kKLTMediaTimingFunctionEaseOutCubic];
-        obj.path = dPath4.CGPath;
+        obj.path = dPath7.CGPath;
         [obj addAnimation:keyAnimation forKey:kIndeterminateAnimation];
     }];
     
