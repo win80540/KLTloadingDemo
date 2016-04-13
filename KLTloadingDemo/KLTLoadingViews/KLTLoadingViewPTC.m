@@ -82,7 +82,13 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
     }
     self.layer.opacity = 0;
 }
-
+- (void)setFrame:(CGRect)frame{
+    [super setFrame:frame];
+    [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        UIBezierPath *path = [self __getProgressPathForIdx:idx withProgress:0];
+        obj.path = path.CGPath;
+    }];
+}
 - (UIBezierPath *)__getProgressPathForIdx:(NSUInteger)idx withProgress:(CGFloat)progress{
     return [UIBezierPath bezierPathWithArcCenter:[self __getProgressPostionForIdx:idx withProgress:progress] radius:self.pointRadiu_Big startAngle:M_PI endAngle:-M_PI clockwise:NO];
 }
@@ -303,6 +309,10 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
     }];
     [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         CAShapeLayer *presentationLayer = obj.presentationLayer?obj.presentationLayer:obj;
+        id originalPath = (__bridge id)(presentationLayer.path);
+        if (self.progress != 0) {
+            originalPath = [self __getIndeterminatePathForIdx:idx withProgress:0.85];
+        }
         UIBezierPath *dPath = [self __getIndeterminatePathForIdx:idx maxRadius:self.distance_Farther withProgress:0];
         UIBezierPath *dPath2 = [self __getIndeterminatePathForIdx:idx maxRadius:self.distance_Far withProgress:0];
         CAKeyframeAnimation *keyAnimation = [CAKeyframeAnimation animationWithKeyPath:@"path"];
@@ -312,7 +322,7 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
                                   @1
                                   ];
         keyAnimation.values = @[
-                                (__bridge id)(presentationLayer.path),
+                                originalPath,
                                 (__bridge id)dPath.CGPath,
                                 (__bridge id)dPath2.CGPath,
                                 ];
@@ -322,6 +332,14 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
         obj.path = dPath2.CGPath;
         [obj addAnimation:keyAnimation forKey:kIndeterminateAnimation];
     }];
+
+    CAShapeLayer *presentationLayer = self.layer.presentationLayer?self.layer.presentationLayer:self.layer;
+    CABasicAnimation *opacityAnim = [CABasicAnimation animationWithKeyPath:@"opacity"];
+    opacityAnim.fromValue = @(presentationLayer.opacity);
+    opacityAnim.toValue = @(1.0);
+    opacityAnim.duration = 0.1;
+    self.layer.opacity = 1;
+    [self.layer addAnimation:opacityAnim forKey:kIndeterminateAnimation];
 
     [CATransaction commit];
 }
