@@ -115,11 +115,11 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
     UIBezierPath *bezierPath = [UIBezierPath bezierPath];
     [bezierPath moveToPoint:[self __getPointForAngel:idx*M_PI_2-M_PI_4+space withDistance:bigRadius]];
     [bezierPath addQuadCurveToPoint:[self __getPointForAngel:(idx+1)*M_PI_2-M_PI_4-space withDistance:bigRadius] controlPoint:[self __getPointForAngel:idx*M_PI_2-M_PI_4+M_PI_2/2.0 withDistance:bigRadius/cos(M_PI_2/2-space)]];
-//    [bezierPath addLineToPoint:[self __getPointForAngel:(idx+1)*M_PI_2-space withDistance:bigRadius-radiusDelta]];
+    //    [bezierPath addLineToPoint:[self __getPointForAngel:(idx+1)*M_PI_2-space withDistance:bigRadius-radiusDelta]];
     [bezierPath addQuadCurveToPoint:[self __getPointForAngel:(idx+1)*M_PI_2-M_PI_4-space withDistance:bigRadius-radiusDelta] controlPoint:[self __getPointForAngel:(idx+1)*M_PI_2-M_PI_4-space+controlAngel withDistance:bigRadius-radiusDelta/2.0]];
     [bezierPath addQuadCurveToPoint:[self __getPointForAngel:idx*M_PI_2-M_PI_4+space withDistance:bigRadius-radiusDelta] controlPoint:[self __getPointForAngel:idx*M_PI_2-M_PI_4+M_PI_2/2.0 withDistance:(bigRadius-radiusDelta)/cos(M_PI_2/2-space)]];
     [bezierPath addQuadCurveToPoint:[self __getPointForAngel:idx*M_PI_2-M_PI_4+space withDistance:bigRadius] controlPoint:[self __getPointForAngel:idx*M_PI_2-M_PI_4+space-controlAngel withDistance:bigRadius-radiusDelta/2.0]];
-//    [bezierPath addLineToPoint:[self __getPointForAngel:idx*M_PI_2+space withDistance:bigRadius]];
+    //    [bezierPath addLineToPoint:[self __getPointForAngel:idx*M_PI_2+space withDistance:bigRadius]];
     return bezierPath;
 }
 - (CGPoint)__getProgressPostionForIdx:(NSUInteger)idx withProgress:(CGFloat)progress{
@@ -176,7 +176,7 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
             
             if (progress <= step1) {
                 CGFloat step1Progress = progress/step1;
-               
+                
                 CALayer *presentationLayer =  self.layer.presentationLayer?self.layer.presentationLayer:self.layer;
                 
                 CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"opacity"];
@@ -209,7 +209,7 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
                 CAAnimationGroup *groupAnim = [CAAnimationGroup animation];
                 groupAnim.animations = @[animation,rotateAnim];
                 groupAnim.duration = duration;
-
+                
                 self.layer.opacity = 1.0;
                 self.layer.transform = CATransform3DMakeRotation(M_PI*1, 0, 0, 1);
                 
@@ -303,18 +303,19 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
 }
 - (void)__beginAnimation{
     if (self.stopAnimationImmediately) {
+        [self __removeAnimation];
         return;
     }
-    [self.layer removeAnimationForKey:kProgressAnimation];
-    [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        [obj removeAllAnimations];
-    }];
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
     [CATransaction setCompletionBlock:^{
         [self __circleAnimationBegain];
     }];
     [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (_stopAnimationImmediately) {
+            *stop = YES;
+            return;
+        }
         CAShapeLayer *presentationLayer = obj.presentationLayer?obj.presentationLayer:obj;
         id originalPath = (__bridge id)(presentationLayer.path);
         if (self.progress != 0) {
@@ -339,19 +340,22 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
         obj.path = dPath2.CGPath;
         [obj addAnimation:keyAnimation forKey:kIndeterminateAnimation];
     }];
-
-    CAShapeLayer *presentationLayer = self.layer.presentationLayer?self.layer.presentationLayer:self.layer;
-    CABasicAnimation *opacityAnim = [CABasicAnimation animationWithKeyPath:@"opacity"];
-    opacityAnim.fromValue = @(presentationLayer.opacity);
-    opacityAnim.toValue = @(1.0);
-    opacityAnim.duration = 0.1;
-    self.layer.opacity = 1;
-    [self.layer addAnimation:opacityAnim forKey:kIndeterminateAnimation];
-
+    if (!_stopAnimationImmediately){
+        CAShapeLayer *presentationLayer = self.layer.presentationLayer?self.layer.presentationLayer:self.layer;
+        CABasicAnimation *opacityAnim = [CABasicAnimation animationWithKeyPath:@"opacity"];
+        opacityAnim.fromValue = @(presentationLayer.opacity);
+        opacityAnim.toValue = @(1.0);
+        opacityAnim.duration = 0.1;
+        self.layer.opacity = 1;
+        [self.layer addAnimation:opacityAnim forKey:kIndeterminateAnimation];
+    }else{
+        [self __removeAnimation];
+    }
     [CATransaction commit];
 }
 - (void)__circleAnimationBegain{
     if (self.stopAnimationImmediately) {
+        [self __removeAnimation];
         return;
     }
     [CATransaction begin];
@@ -359,26 +363,30 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
     [CATransaction setCompletionBlock:^{
         [self __circleAnimationEnd];
     }];
-    
-    CAKeyframeAnimation *rotateAnim = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
-    rotateAnim.keyTimes = @[
-                            @(0),
-                            @(1/3.0),
-                            @(2/3.0),
-                            @(1),
-                            ];
-    rotateAnim.values = @[
-                          @(0.0),
-                          @(M_PI_2),
-                          @(M_PI_2*2),
-                          @(M_PI_2*3),
-                          ];
-    rotateAnim.duration = 0.6;
-    rotateAnim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-    self.layer.transform = CATransform3DRotate(CATransform3DIdentity, M_PI_2*3, 0, 0, 1);
-    [self.layer addAnimation:rotateAnim forKey:kProgressAnimation];
-    
+    if (!_stopAnimationImmediately){
+        CAKeyframeAnimation *rotateAnim = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
+        rotateAnim.keyTimes = @[
+                                @(0),
+                                @(1/3.0),
+                                @(2/3.0),
+                                @(1),
+                                ];
+        rotateAnim.values = @[
+                              @(0.0),
+                              @(M_PI_2),
+                              @(M_PI_2*2),
+                              @(M_PI_2*3),
+                              ];
+        rotateAnim.duration = 0.6;
+        rotateAnim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+        self.layer.transform = CATransform3DRotate(CATransform3DIdentity, M_PI_2*3, 0, 0, 1);
+        [self.layer addAnimation:rotateAnim forKey:kProgressAnimation];
+    }
     [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (_stopAnimationImmediately) {
+            *stop = YES;
+            return;
+        }
         CAShapeLayer *presentationLayer = obj.presentationLayer?obj.presentationLayer:obj;
         UIBezierPath *dPath1 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.45 andProgress:0];
         UIBezierPath *dPath2 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.35 andProgress:0];
@@ -405,25 +413,28 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
         obj.path = dPath4.CGPath;
         [obj addAnimation:keyAnimation forKey:kIndeterminateAnimation];
     }];
-    
+    if (_stopAnimationImmediately) {
+        [self __removeAnimation];
+    }
     [CATransaction commit];
 }
 - (void)__circleAnimationEnd{
     if (self.stopAnimationImmediately) {
+        [self __removeAnimation];
         return;
     }
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
     [CATransaction setCompletionBlock:^{
-#ifndef __OPTIMIZE__
-        //调试代码
-        static int count = 0;
-        count ++;
-        if (count > 6) {
-            self.shouldStopAnimation = YES;
-            count = 0;
-        }
-#endif
+        #ifndef __OPTIMIZE__
+                //调试代码
+                static int count = 0;
+                count ++;
+                if (count > 6) {
+                    self.shouldStopAnimation = YES;
+                    count = 0;
+                }
+        #endif
         if ([self shouldStopAnimation]) {
             [self __endAnimation];
         }else{
@@ -439,6 +450,10 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
     [self.layer addAnimation:rotateAnim forKey:kProgressAnimation];
     
     [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (_stopAnimationImmediately) {
+            *stop = YES;
+            return;
+        }
         UIBezierPath *dPath1 = [self __getIndeterminatePathLineForIdx:idx withProgress:0];
         UIBezierPath *dPath2 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.15 andProgress:0.1];
         UIBezierPath *dPath3 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.35 andProgress:0.3];
@@ -470,11 +485,14 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
         obj.path = dPath7.CGPath;
         [obj addAnimation:keyAnimation forKey:kIndeterminateAnimation];
     }];
-    
+    if (_stopAnimationImmediately) {
+        [self __removeAnimation];
+    }
     [CATransaction commit];
 }
 - (void)__circleAnimation{
     if (self.stopAnimationImmediately) {
+        [self __removeAnimation];
         return;
     }
     [CATransaction begin];
@@ -482,25 +500,30 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
     [CATransaction setCompletionBlock:^{
         [self __circleAnimationEnd];
     }];
-    CAKeyframeAnimation *rotateAnim = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
-    rotateAnim.keyTimes = @[
-                            @(0),
-                            @(1/3.0),
-                            @(2/3.0),
-                            @(1),
-                            ];
-    rotateAnim.values = @[
-                          @(0.0),
-                          @(M_PI_2),
-                          @(M_PI_2*2),
-                          @(M_PI_2*3),
-                          ];
-    rotateAnim.duration = 0.6;
-    rotateAnim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-    self.layer.transform = CATransform3DRotate(CATransform3DIdentity, M_PI_2*3, 0, 0, 1);
-    [self.layer addAnimation:rotateAnim forKey:kProgressAnimation];
-    
+    if (!_stopAnimationImmediately) {
+        CAKeyframeAnimation *rotateAnim = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
+        rotateAnim.keyTimes = @[
+                                @(0),
+                                @(1/3.0),
+                                @(2/3.0),
+                                @(1),
+                                ];
+        rotateAnim.values = @[
+                              @(0.0),
+                              @(M_PI_2),
+                              @(M_PI_2*2),
+                              @(M_PI_2*3),
+                              ];
+        rotateAnim.duration = 0.6;
+        rotateAnim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+        self.layer.transform = CATransform3DRotate(CATransform3DIdentity, M_PI_2*3, 0, 0, 1);
+        [self.layer addAnimation:rotateAnim forKey:kProgressAnimation];
+    }
     [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (_stopAnimationImmediately) {
+            *stop = YES;
+            return;
+        }
         UIBezierPath *dPath1 = [self __getIndeterminatePathForIdx:idx withProgress:1];
         UIBezierPath *dPath2 = [self __getIndeterminatePathForIdx:idx withProgress:0.81];
         UIBezierPath *dPath3 = [self __getIndeterminatePathLineForIdx:idx space:M_PI_2*0.45 andProgress:0.8];
@@ -532,11 +555,14 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
         obj.path = dPath7.CGPath;
         [obj addAnimation:keyAnimation forKey:kIndeterminateAnimation];
     }];
-    
+    if (_stopAnimationImmediately) {
+        [self __removeAnimation];
+    }
     [CATransaction commit];
 }
 - (void)__endAnimation{
     if (self.stopAnimationImmediately) {
+        [self __removeAnimation];
         return;
     }
     [CATransaction begin];
@@ -546,33 +572,37 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
         self.isAnimating = NO;
         if(self.endCallback){
             self.endCallback();
+            self.endCallback = nil;
         }
     }];
-    CAKeyframeAnimation *rotateAnim = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
-    rotateAnim.keyTimes = @[
-                            @(0),
-                            @(1),
-                            ];
-    rotateAnim.values = @[
-                          @(0.0),
-                          @(M_PI_2)
-                          ];
-    rotateAnim.duration = 0.2;
-    
-    CABasicAnimation * opacity = [CABasicAnimation animationWithKeyPath:@"opacity"];
-    opacity.fromValue = @(1.0);
-    opacity.toValue = @(0.0);
-    opacity.duration = 0.2;
-    
-    CAAnimationGroup *group = [CAAnimationGroup animation];
-    group.animations = @[
-                         rotateAnim,
-                         opacity
-                         ];
-    
-    self.layer.opacity = 0;
-    [self.layer addAnimation:group forKey:kProgressAnimation];
-
+    if (_stopAnimationImmediately) {
+        [self __removeAnimation];
+    }else{
+        CAKeyframeAnimation *rotateAnim = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
+        rotateAnim.keyTimes = @[
+                                @(0),
+                                @(1),
+                                ];
+        rotateAnim.values = @[
+                              @(0.0),
+                              @(M_PI_2)
+                              ];
+        rotateAnim.duration = 0.2;
+        
+        CABasicAnimation * opacity = [CABasicAnimation animationWithKeyPath:@"opacity"];
+        opacity.fromValue = @(1.0);
+        opacity.toValue = @(0.0);
+        opacity.duration = 0.2;
+        
+        CAAnimationGroup *group = [CAAnimationGroup animation];
+        group.animations = @[
+                             rotateAnim,
+                             opacity
+                             ];
+        
+        self.layer.opacity = 0;
+        [self.layer addAnimation:group forKey:kProgressAnimation];
+    }
     [CATransaction commit];
 }
 - (void)stopIndeterminateAnimation
@@ -580,28 +610,30 @@ NSString * const kIndeterminateAnimation = @"IndeterminateAnimation";
     [self stopIndeterminateAnimationWithCallBack:nil];
 }
 - (void)stopIndeterminateAnimationWithCallBack:(void (^)())callback{
-    if (!self.isAnimating) {
-        return;
-    }
-
     self.endCallback = callback;
     self.shouldStopAnimation = YES;
 }
 - (void)stopIndeterminateAnimationImmediately{
-    if (!self.isAnimating) {
-        return;
-    }
-    
     self.stopAnimationImmediately = YES;
 }
 - (void)setStopAnimationImmediately:(BOOL)stopAnimationImmediately{
     _stopAnimationImmediately = stopAnimationImmediately;
-    self.isAnimating = NO;
+    if (stopAnimationImmediately) {
+        self.progress = 0;
+        self.layer.opacity = 0;
+        self.isAnimating = NO;
+        [self __removeAnimation];
+        [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            UIBezierPath *dPath7 = [self __getIndeterminatePathForIdx:idx withProgress:1];
+            obj.path = dPath7.CGPath;
+        }];
+    }
+}
+- (void)__removeAnimation{
+    NSLog(@"\n\n\n\n-------klt remove animation callstack:-------- \n %@ \n\n\n\n",[[NSThread callStackSymbols] componentsJoinedByString:@" \n "]);
     [self.layer removeAllAnimations];
     [self.shapeLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         [obj removeAllAnimations];
     }];
-    self.progress = 0;
-    self.layer.opacity = 0;
 }
 @end
